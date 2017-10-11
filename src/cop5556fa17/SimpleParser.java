@@ -8,11 +8,11 @@ import java.util.Arrays;
 
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
-import cop5556fa17.Parser.SyntaxException;
+import cop5556fa17.SimpleParser.SyntaxException;
 
 import static cop5556fa17.Scanner.Kind.*;
 
-public class Parser {
+public class SimpleParser {
 
 	@SuppressWarnings("serial")
 	public class SyntaxException extends Exception {
@@ -28,7 +28,7 @@ public class Parser {
 	Scanner scanner;
 	Token t;
 
-	Parser(Scanner scanner) {
+	SimpleParser(Scanner scanner) {
 		this.scanner = scanner;
 		t = scanner.nextToken();
 	}
@@ -47,8 +47,12 @@ public class Parser {
 	 * Just Consume a token
 	 */
 	public void consume() throws SyntaxException {
-		System.out.println("Matching -  ==> " + t.kind.toString() + "| " + t.toString());
+//		System.out.println("Consuming -  ==> " + t.kind.toString() + "\t|" + t.toString());
 		t = scanner.nextToken();
+	}
+	
+	private String lineStamp(String tok){
+		return "Expected "+ tok +" at " + t.line + ":" + t.pos_in_line;
 	}
 
 	/**
@@ -57,13 +61,13 @@ public class Parser {
 	 * @param Kind
 	 */
 	public boolean matchAndConsume(Kind matchKind) throws SyntaxException {
-		System.out.println("Matching - " + matchKind + " == " + t.kind.toString() + "| " + t.toString());
+//		System.out.println("Matching:" + matchKind + " == " + t.kind.toString() + "\t|" + t.toString());
 		if (matchKind == t.kind) {
 			t = scanner.nextToken();
 			return true;
 		} else {
-			System.out.println("Failed to match");
-			throw new SyntaxException(t, "Not a match - " + matchKind.toString());
+			System.out.print("Failed to match" );
+			throw new SyntaxException(t, lineStamp(matchKind.toString() + " but found "+ t.getText() + " of type " + t.kind));
 			// return false;
 		}
 	}
@@ -71,9 +75,7 @@ public class Parser {
 	public boolean matchAndConsume(Kind[] matchKinds) throws SyntaxException {
 		boolean allBool = true;
 		for (Kind k : matchKinds) {
-			allBool = allBool && matchAndConsume(k); // All Bool should be true
-														// for everything for it
-														// to be true
+			allBool = allBool && matchAndConsume(k); // All Bool should be true for everything for it to be true
 		}
 		return allBool;
 	}
@@ -89,33 +91,31 @@ public class Parser {
 		/*
 		 * Program ::= IDENTIFIER ( Declaration SEMI | Statement SEMI )*
 		 */
-		System.out.println("Tokens:!!" + t.toString() + t.length);
 
 		if (t.isKind(EOF)) {
 			throw new SyntaxException(t, "Empty Program");
 		}
-
+		
 		matchAndConsume(IDENTIFIER);
 		while (t.isKinds(new Kind[] { KW_int, KW_boolean, KW_image, KW_url, KW_file, IDENTIFIER })) {
-
 			if (t.isKinds(new Kind[] { KW_int, KW_boolean, KW_image, KW_url, KW_file })) {
 				declare();
 			} else if (t.isKind(IDENTIFIER)) {
 				statement();
 			} else {
-				throw new SyntaxException(t, "- program fail");
+				throw new SyntaxException(t, lineStamp("program"));
 			}
 			matchAndConsume(SEMI);
 		}
 
-		if (!t.isKind(EOF))
-			throw new SyntaxException(t, "- program fail");
+//		if (!t.isKind(EOF))
+//			throw new SyntaxException(t, lineStamp("program"));
 	}
 
 	private void declare() throws SyntaxException {
 		/*
-		 * Declaration :: = VariableDeclaration | ImageDeclaration |
-		 * SourceSinkDeclaration
+		 * Declaration :: = VariableDeclaration | ImageDeclaration | SourceSinkDeclaration
+		 * @eg: int a=0 | image
 		 */
 		switch (t.kind) {
 		case KW_int:
@@ -130,17 +130,17 @@ public class Parser {
 			ssDeclare();
 			break;
 		default:
-			throw new SyntaxException(t, " - Failed Declaration");
+			throw new SyntaxException(t, lineStamp("declaration"));
 		}
 	}
 
 	private void statement() throws SyntaxException {
 		/*
-		 * Statement ::= AssignmentStatement | ImageOutStatement |
-		 * ImageInStatement AssignmentStatement ::= Lhs OP_ASSIGN Expression
-		 * ImageInStatement ::= IDENTIFIER OP_LARROW Source ImageOutStatement
-		 * ::= IDENTIFIER OP_RARROW Sink Lhs::= IDENTIFIER ( LSQUARE LhsSelector
-		 * RSQUARE | EPS )
+		 * Statement ::= AssignmentStatement | ImageOutStatement | ImageInStatement
+		 * AssignmentStatement ::= Lhs OP_ASSIGN Expression
+		 * ImageInStatement ::= IDENTIFIER OP_LARROW Source 
+		 * ImageOutStatement ::= IDENTIFIER OP_RARROW Sink 
+		 * Lhs::= IDENTIFIER ( LSQUARE LhsSelector RSQUARE | EPS )
 		 */
 		matchAndConsume(Kind.IDENTIFIER); // Common FIRST(Statement)
 		switch (t.kind) {
@@ -161,15 +161,16 @@ public class Parser {
 			expression();
 			break;
 		default:
-			throw new SyntaxException(t, " - statement fail" + t.toString());
+			throw new SyntaxException(t, lineStamp("statement"));
 		}
 
 	}
 
 	private void variableDeclare() throws SyntaxException {
 		/*
-		 * VariableDeclaration ::= VarType IDENTIFIER ( OP_ASSIGN Expression |
-		 * EPS ) VarType ::= KW_int | KW_boolean
+		 * VariableDeclaration ::= VarType IDENTIFIER ( OP_ASSIGN Expression | EPS ) 
+		 * VarType ::= KW_int | KW_boolean
+		 * @eg: int a = 0
 		 */
 		consume(); // VarType
 		matchAndConsume(Kind.IDENTIFIER);
@@ -182,8 +183,8 @@ public class Parser {
 
 	public void imageDeclare() throws SyntaxException {
 		/*
-		 * ImageDeclaration ::= KW_image (LSQUARE Expression COMMA Expression
-		 * RSQUARE | EPS) IDENTIFIER ( OP_LARROW Source | EPS )
+		 * ImageDeclaration ::= KW_image (LSQUARE Expression COMMA Expression RSQUARE | EPS) IDENTIFIER ( OP_LARROW Source | EPS )
+		 * @eg image [sin(x), cos(x)] equals <- source
 		 */
 		matchAndConsume(Kind.KW_image);
 		if (t.kind == Kind.LSQUARE) {
@@ -211,10 +212,16 @@ public class Parser {
 		source();
 	}
 
-	private void source() throws SyntaxException {
+	public void source() throws SyntaxException {
 		/*
-		 * Source ::= STRING_LITERAL Source ::= OP_AT Expression Source ::=
-		 * IDENTIFIER
+		 * Source ::= STRING_LITERAL 
+		 * Source ::= OP_AT Expression 
+		 * Source ::= IDENTIFIER
+		 * eg: 
+		 * "hello world"
+		 * @exp
+		 * variable
+		 * 
 		 */
 		switch (t.kind) {
 		case STRING_LITERAL:
@@ -228,7 +235,7 @@ public class Parser {
 			matchAndConsume(Kind.IDENTIFIER);
 			break;
 		default:
-			throw new SyntaxException(t, "- source fail");
+			throw new SyntaxException(t, lineStamp("source"));
 		}
 	}
 
@@ -241,7 +248,7 @@ public class Parser {
 		} else if (t.kind == KW_SCREEN) {
 			matchAndConsume(KW_SCREEN);
 		} else {
-			throw new SyntaxException(t, "- sink fail");
+			throw new SyntaxException(t, lineStamp("sink"));
 		}
 	}
 
@@ -270,8 +277,8 @@ public class Parser {
 	 */
 	void expression() throws SyntaxException {
 		/*
-		 * Expression ::= OrExpression OP_Q Expression OP_COLON Expression |
-		 * OrExpression
+		 * Expression ::= OrExpression OP_Q Expression OP_COLON Expression 
+		 * 				| OrExpression
 		 */
 		orExpression();
 		if (t.isKind(OP_Q)) {
@@ -365,9 +372,9 @@ public class Parser {
 
 	public void ueNotPlusMinus() throws SyntaxException {
 		/*
-		 * UnaryExpressionNotPlusMinus ::= OP_EXCL UnaryExpression | Primary |
-		 * IdentOrPixelSelectorExpression | KW_x | KW_y | KW_r | KW_a | KW_X |
-		 * KW_Y | KW_Z | KW_A | KW_R | KW_DEF_X | KW_DEF_Y
+		 * UnaryExpressionNotPlusMinus ::= OP_EXCL UnaryExpression | Primary | IdentOrPixelSelectorExpression 
+		 * 								| KW_x | KW_y | KW_r | KW_a | KW_X | KW_Y | KW_Z | KW_A | KW_R | KW_DEF_X | KW_DEF_Y
+		 * @eg: ! 
 		 */
 		if (t.isKinds(new Kind[] { KW_x, KW_y, KW_r, KW_a, KW_X, KW_Y, KW_Z, KW_A, KW_R, KW_DEF_X, KW_DEF_Y })) {
 			consume();
@@ -380,7 +387,7 @@ public class Parser {
 				KW_cart_x, KW_cart_y, KW_polar_a, KW_polar_r })) {
 			primary();
 		} else {
-			throw new SyntaxException(t, "- UnaryExpressionNotPlusMinus fail");
+			throw new SyntaxException(t, lineStamp("UnaryExpressionNotPlusMinus"));
 		}
 	}
 
@@ -401,7 +408,7 @@ public class Parser {
 				new Kind[] { KW_sin, KW_cos, KW_atan, KW_abs, KW_cart_x, KW_cart_y, KW_polar_a, KW_polar_r })) {
 			functionApp();
 		} else {
-			throw new SyntaxException(t, " - primary fail");
+			throw new SyntaxException(t, lineStamp("primary"));
 		}
 	}
 
@@ -409,6 +416,7 @@ public class Parser {
 		/*
 		 * IdentOrPixelSelectorExpression::= IDENTIFIER LSQUARE Selector RSQUARE
 		 * 								   | IDENTIFIER
+		 * @eg: test[a,b], notest
 		 */
 		matchAndConsume(IDENTIFIER);
 		if (t.isKind(LSQUARE)) {
@@ -427,7 +435,7 @@ public class Parser {
 			matchAndConsume(COMMA);
 			expression();
 		} catch (Exception e) {
-			throw new SyntaxException(t,"- selector fail");
+			throw new SyntaxException(t, lineStamp("selector"));
 		}
 	}
 
@@ -435,6 +443,7 @@ public class Parser {
 		/*
 		 * FunctionApplication ::= FunctionName LPAREN Expression RPAREN |
 		 * FunctionName LSQUARE Selector RSQUARE
+		 * @eg: sin(a+b) | cart_x[x+y]
 		 */
 		functionName();
 		if (t.isKind(LPAREN)) {
@@ -446,7 +455,7 @@ public class Parser {
 			selector();
 			matchAndConsume(RSQUARE);
 		} else {
-			throw new SyntaxException(t, "- function app fail");
+			throw new SyntaxException(t, lineStamp("function application"));
 		}
 	}
 
@@ -458,7 +467,7 @@ public class Parser {
 		if (t.isKinds(new Kind[] { KW_sin, KW_cos, KW_atan, KW_abs, KW_cart_x, KW_cart_y, KW_polar_a, KW_polar_r })) {
 			consume();
 		} else {
-			throw new SyntaxException(t, "- function name fail");
+			throw new SyntaxException(t, lineStamp("function name"));
 		}
 	}
 

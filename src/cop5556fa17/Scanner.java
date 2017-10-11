@@ -462,7 +462,7 @@ public class Scanner {
 							case EOFchar:
 								break;
 							default:
-								throw new LexicalException("Invalid character Input at line:" + line + ", position:"+ pos, pos);
+								throw new LexicalException("Invalid character '"+ chars[pos]+ "' at line:" + line + ", position:"+ pos, pos);
 							//break;
 						}
 						pos++;

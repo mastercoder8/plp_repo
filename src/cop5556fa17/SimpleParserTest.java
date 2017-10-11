@@ -8,7 +8,7 @@ import org.junit.rules.ExpectedException;
 
 import cop5556fa17.Scanner.LexicalException;
 import cop5556fa17.Scanner.Token;
-import cop5556fa17.Parser.SyntaxException;
+import cop5556fa17.SimpleParser.SyntaxException;
 
 import static cop5556fa17.Scanner.Kind.*;
 
@@ -42,7 +42,7 @@ public class SimpleParserTest {
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		Parser parser = new Parser(scanner); // Create a parser
+		SimpleParser parser = new SimpleParser(scanner); // Create a parser
 		thrown.expect(SyntaxException.class);
 		try {
 			parser.parse(); // Parse the program
@@ -67,7 +67,7 @@ public class SimpleParserTest {
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		Parser parser = new Parser(scanner); //
+		SimpleParser parser = new SimpleParser(scanner); //
 		parser.parse();
 	}
 
@@ -89,13 +89,71 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		Parser parser = new Parser(scanner);
+		SimpleParser parser = new SimpleParser(scanner);
 		parser.expression(); // Call expression directly.
 	}
 	
 	@Test
-	public void jtestcase1() throws SyntaxException, LexicalException{
-		
+	public void testExpression2() throws SyntaxException, LexicalException{
+			String input = "4+4== 2+3";
+			show(input);
+			Scanner scanner = new Scanner(input).scan();  
+			show(scanner);   
+			SimpleParser parser = new SimpleParser(scanner);  
+			parser.expression();  //Call expression directly.  
 	}
-
+	
+	@Test
+	public void testExpression3() throws SyntaxException, LexicalException{
+			String input = "program int x=0;x++;";
+			show(input);
+			Scanner scanner = new Scanner(input).scan();  
+			show(scanner); // Display the Scanner
+			SimpleParser parser = new SimpleParser(scanner); // Create a parser
+			thrown.expect(SyntaxException.class);
+			try {
+				parser.parse(); // Parse the program
+			} catch (SyntaxException e) {
+				show(e);
+				throw e;
+			}   
+	}
+	@Test
+	public void testExpression5()throws SyntaxException, LexicalException{
+		String input = "x identifier";
+		show(input);
+		Scanner scanner = new Scanner(input).scan();  
+		show(scanner); // Display the Scanner
+		SimpleParser parser = new SimpleParser(scanner); // Create a parser
+		parser.expression(); // Parse the program
+	}
+	
+	@Test
+	public void testProgram4()throws SyntaxException, LexicalException{
+		String input = "program int a1=0;a1 = b1+1;";
+		show(input);
+		Scanner scanner = new Scanner(input).scan();  
+		show(scanner);   
+		SimpleParser parser = new SimpleParser(scanner);  
+		parser.program();   
+	}
+	@Test
+	public void testProgram5()throws SyntaxException, LexicalException{
+		String input = "prog n=cos(n+1);a$iterata->hello; method=atan(hello); hello=hello+1; state = h?0:a;";
+		show(input);
+		Scanner scanner = new Scanner(input).scan();  
+		show(scanner);   
+		SimpleParser parser = new SimpleParser(scanner);  
+		parser.program();   
+	}
+	
+	@Test
+	public void testSource() throws SyntaxException, LexicalException{
+		String input = "\"hello world\"";
+		show(input);
+		Scanner scanner = new Scanner(input).scan();  
+		show(scanner);   
+		SimpleParser parser = new SimpleParser(scanner);  
+		parser.source();  //Call expression directly.  
+	}
 }
