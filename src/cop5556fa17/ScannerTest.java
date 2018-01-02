@@ -166,6 +166,28 @@ public class ScannerTest {
 	}
 	
 	@Test
+	public void testDeclare() throws LexicalException{
+		String input = "prog image _abc;_abc = \"C:\\\\jc\\\\image.png\"; int _a = 5;";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, IDENTIFIER,0,4,1,1);
+		checkNext(scanner,KW_image,5,5,1,6);
+		checkNext(scanner,IDENTIFIER,11,4,1,12);
+		checkNext(scanner,SEMI,15,1,1,16);
+		checkNext(scanner,IDENTIFIER,16,4,1,17);
+		checkNext(scanner,OP_ASSIGN,21,1,1,22);
+		checkNext(scanner,STRING_LITERAL,23,19,1,24);
+		checkNext(scanner,SEMI,42,1,1,43);
+		checkNext(scanner,KW_int,44,3,1,45);
+		checkNext(scanner,IDENTIFIER,48,2,1,49);
+		checkNext(scanner,OP_ASSIGN,51,1,1,52);
+		checkNext(scanner,INTEGER_LITERAL,53,1,1,54);
+		checkNext(scanner,SEMI,54,1,1,55);
+		checkNextIsEOF(scanner);
+	}
+	
+	@Test
 	public void testDigit() throws LexicalException {
 		String input = "123 ";
 		Scanner scanner = new Scanner(input).scan();

@@ -74,6 +74,15 @@ public class Scanner {
 		String getName(){
 			return name;
 		}
+		
+		boolean matches(String[] kinds){
+			for(String kind_name : kinds){
+				if(kind_name == this.name){
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 	/** enum of states in DFA
 	 *  This is defined to represent states in a DFA
